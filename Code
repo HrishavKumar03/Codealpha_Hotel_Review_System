@@ -1,0 +1,321 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
+// Hotel Class
+class Hotel {
+    private String name;
+    private String location;
+
+    public Hotel(String name, String location) {
+        this.name = name;
+        this.location = location;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    @Override
+    public String toString() {
+        return name + " (" + location + ")";
+    }
+}
+
+// Review Class
+class Review {
+    private Hotel hotel;
+    private String user;
+    private String comment;
+    private int rating; // rating out of 5
+
+    public Review(Hotel hotel, String user, String comment, int rating) {
+        this.hotel = hotel;
+        this.user = user;
+        this.comment = comment;
+        this.rating = rating;
+    }
+
+    public Hotel getHotel() {
+        return hotel;
+    }
+
+    public String getUser() {
+        return user;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public int getRating() {
+        return rating;
+    }
+
+    @Override
+    public String toString() {
+        return "User: " + user + ", Rating: " + rating + ", Comment: " + comment;
+    }
+}
+
+// ReviewSystem Class
+class ReviewSystem {
+    private List<Hotel> hotels;
+    private List<Review> reviews;
+
+    public ReviewSystem() {
+        hotels = new ArrayList<>();
+        reviews = new ArrayList<>();
+    }
+
+    public void addHotel(Hotel hotel) {
+        hotels.add(hotel);
+    }
+
+    public void addReview(Review review) {
+        reviews.add(review);
+    }
+
+    public List<Review> getReviewsForHotel(String hotelName) {
+        List<Review> hotelReviews = new ArrayList<>();
+        for (Review review : reviews) {
+            if (review.getHotel().getName().equalsIgnoreCase(hotelName)) {
+                hotelReviews.add(review);
+            }
+        }
+        return hotelReviews;
+    }
+
+    public List<Review> sortReviewsByRating(boolean ascending) {
+        List<Review> sortedReviews = new ArrayList<>(reviews);
+        sortedReviews.sort(Comparator.comparingInt(Review::getRating));
+        if (!ascending) {
+            Collections.reverse(sortedReviews);
+        }
+        return sortedReviews;
+    }
+
+    public List<Review> filterReviewsByRating(int minRating) {
+        List<Review> filteredReviews = new ArrayList<>();
+        for (Review review : reviews) {
+            if (review.getRating() >= minRating) {
+                filteredReviews.add(review);
+            }
+        }
+        return filteredReviews;
+    }
+
+    public List<Hotel> getHotels() {
+        return hotels;
+    }
+}
+
+// HotelReviewGUI Class
+public class HotelReviewGUI {
+    private JFrame frame;
+    private JTextField hotelNameField;
+    private JTextField hotelLocationField;
+    private JTextField userNameField;
+    private JTextField ratingField;
+    private JTextArea commentArea;
+    private JComboBox<Hotel> hotelComboBox;
+    private JTextArea reviewArea;
+    private ReviewSystem reviewSystem;
+
+    public HotelReviewGUI() {
+        reviewSystem = new ReviewSystem();
+        initialize();
+    }
+
+    private void initialize() {
+        frame = new JFrame("Hotel Review System");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(600, 700); // Increased size
+        frame.setLayout(new BorderLayout(10, 10));
+
+        // Set background color for the main frame
+        frame.getContentPane().setBackground(new Color(240, 248, 255));
+
+        // Hotel Panel
+        JPanel hotelPanel = new JPanel();
+        hotelPanel.setLayout(new GridLayout(3, 2, 5, 5));
+        hotelPanel.setBorder(BorderFactory.createTitledBorder("Add Hotel"));
+        hotelPanel.setBackground(new Color(173, 216, 230));
+        frame.add(hotelPanel, BorderLayout.NORTH);
+
+        JLabel hotelNameLabel = new JLabel("Hotel Name:");
+        hotelNameField = new JTextField();
+        JLabel hotelLocationLabel = new JLabel("Hotel Location:");
+        hotelLocationField = new JTextField();
+        JButton addHotelButton = new JButton("Add Hotel");
+        addHotelButton.addActionListener(new AddHotelListener());
+
+        hotelPanel.add(hotelNameLabel);
+        hotelPanel.add(hotelNameField);
+        hotelPanel.add(hotelLocationLabel);
+        hotelPanel.add(hotelLocationField);
+        hotelPanel.add(new JLabel()); // Empty cell for alignment
+        hotelPanel.add(addHotelButton);
+
+        // Review Panel
+        JPanel reviewPanel = new JPanel();
+        reviewPanel.setLayout(new GridLayout(5, 2, 5, 5));
+        reviewPanel.setBorder(BorderFactory.createTitledBorder("Add Review"));
+        reviewPanel.setBackground(new Color(176, 224, 230));
+        frame.add(reviewPanel, BorderLayout.CENTER);
+
+        JLabel hotelComboBoxLabel = new JLabel("Select Hotel:");
+        hotelComboBox = new JComboBox<>();
+        JLabel userNameLabel = new JLabel("User Name:");
+        userNameField = new JTextField();
+        JLabel ratingLabel = new JLabel("Rating (1-5):");
+        ratingField = new JTextField();
+        JLabel commentLabel = new JLabel("Comment:");
+        commentArea = new JTextArea();
+        commentArea.setRows(3);
+        commentArea.setLineWrap(true);
+        commentArea.setWrapStyleWord(true);
+        JScrollPane commentScrollPane = new JScrollPane(commentArea);
+
+        JButton addReviewButton = new JButton("Add Review");
+        addReviewButton.addActionListener(new AddReviewListener());
+        JButton viewReviewsButton = new JButton("View Reviews");
+        viewReviewsButton.addActionListener(new ViewReviewsListener());
+
+        reviewPanel.add(hotelComboBoxLabel);
+        reviewPanel.add(hotelComboBox);
+        reviewPanel.add(userNameLabel);
+        reviewPanel.add(userNameField);
+        reviewPanel.add(ratingLabel);
+        reviewPanel.add(ratingField);
+        reviewPanel.add(commentLabel);
+        reviewPanel.add(commentScrollPane);
+        reviewPanel.add(addReviewButton);
+        reviewPanel.add(viewReviewsButton);
+
+        // Buttons for sorting and filtering
+        JPanel sortFilterPanel = new JPanel();
+        sortFilterPanel.setLayout(new GridLayout(1, 3, 5, 5));
+        JButton sortAscButton = new JButton("Sort Ascending");
+        JButton sortDescButton = new JButton("Sort Descending");
+        JButton filterButton = new JButton("Filter by Rating");
+        JButton sortMaxToMinButton = new JButton("Sort Max to Min"); // New button
+        sortAscButton.addActionListener(new SortReviewsListener(true));
+        sortDescButton.addActionListener(new SortReviewsListener(false));
+        filterButton.addActionListener(new FilterReviewsListener());
+        sortMaxToMinButton.addActionListener(new SortMaxToMinListener()); // New listener
+
+        sortFilterPanel.add(sortAscButton);
+        sortFilterPanel.add(sortDescButton);
+        sortFilterPanel.add(filterButton);
+        sortFilterPanel.add(sortMaxToMinButton); // Add new button to panel
+        frame.add(sortFilterPanel, BorderLayout.SOUTH);
+
+        // Review Area
+        reviewArea = new JTextArea();
+        reviewArea.setEditable(false);
+        reviewArea.setLineWrap(true);
+        reviewArea.setWrapStyleWord(true);
+        reviewArea.setBackground(Color.YELLOW); // Set background color to yellow
+        JScrollPane reviewScrollPane = new JScrollPane(reviewArea);
+        reviewScrollPane.setBorder(BorderFactory.createTitledBorder("Reviews"));
+        reviewScrollPane.setPreferredSize(new Dimension(600, 400)); // Increased size
+        frame.add(reviewScrollPane, BorderLayout.SOUTH);
+
+        frame.setVisible(true);
+    }
+
+    private class AddHotelListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            String name = hotelNameField.getText();
+            String location = hotelLocationField.getText();
+            Hotel hotel = new Hotel(name, location);
+            reviewSystem.addHotel(hotel);
+            hotelComboBox.addItem(hotel);
+            hotelNameField.setText("");
+            hotelLocationField.setText("");
+        }
+    }
+
+    private class AddReviewListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            Hotel hotel = (Hotel) hotelComboBox.getSelectedItem();
+            String user = userNameField.getText();
+            int rating = Integer.parseInt(ratingField.getText());
+            String comment = commentArea.getText();
+            Review review = new Review(hotel, user, comment, rating);
+            reviewSystem.addReview(review);
+            userNameField.setText("");
+            ratingField.setText("");
+            commentArea.setText("");
+        }
+    }
+
+    private class ViewReviewsListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            Hotel hotel = (Hotel) hotelComboBox.getSelectedItem();
+            List<Review> reviews = reviewSystem.getReviewsForHotel(hotel.getName());
+            reviewArea.setText("");
+            for (Review review : reviews) {
+                reviewArea.append(review.toString() + "\n");
+            }
+        }
+    }
+
+    private class SortReviewsListener implements ActionListener {
+        private boolean ascending;
+
+        public SortReviewsListener(boolean ascending) {
+            this.ascending = ascending;
+        }
+
+        public void actionPerformed(ActionEvent e) {
+            List<Review> sortedReviews = reviewSystem.sortReviewsByRating(ascending);
+            reviewArea.setText("");
+            for (Review review : sortedReviews) {
+                reviewArea.append(review.toString() + "\n");
+            }
+        }
+    }
+
+    private class FilterReviewsListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            String minRatingStr = JOptionPane.showInputDialog(frame, "Enter minimum rating (1-5):");
+            if (minRatingStr != null) {
+                try {
+                    int minRating = Integer.parseInt(minRatingStr);
+                    List<Review> filteredReviews = reviewSystem.filterReviewsByRating(minRating);
+                    reviewArea.setText("");
+                    for (Review review : filteredReviews) {
+                        reviewArea.append(review.toString() + "\n");
+                    }
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(frame, "Invalid rating. Please enter a number between 1 and 5.");
+                }
+            }
+        }
+    }
+
+    private class SortMaxToMinListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            List<Review> sortedReviews = reviewSystem.sortReviewsByRating(false);
+            reviewArea.setText("");
+            for (Review review : sortedReviews) {
+                reviewArea.append(review.toString() + "\n");
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(HotelReviewGUI::new);
+    }
+}
